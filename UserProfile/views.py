@@ -10,6 +10,12 @@ from django.contrib.auth.hashers import make_password
 from drf_yasg.utils import swagger_auto_schema
 from .models import UserProfile
 from ProfilePic.models import ProfilePic
+import requests
+from django.conf import settings
+import json
+from django.shortcuts import redirect
+kakao_secret = settings.KAKAO_SECRET_KEY
+kakao_redirect_uri = settings.KAKAO_REDIRECT_URI
 
 from .serializers import UserSerializer, TokenRefreshRequestSerializer, SignUpRequestSerializer, UserProfileSerializer
 
@@ -139,3 +145,42 @@ class UserProfileDetailView(APIView):
         user_profile = UserProfile.objects.get(user_id=user_id)
         serializer = UserProfileSerializer(user_profile)
         return Response(serializer.data)
+
+class KakaoSignInView(APIView):
+    def get(self, request):
+        request_uri = f"https://kauth.kakao.com/oauth/authorize?client_id={kakao_secret}&redirect_uri={kakao_redirect_uri}&response_type=code"
+        return Response(request_uri, status=status.HTTP_200_OK)
+
+
+class KakaoSignInCallbackView(APIView):
+    def get(self, request):
+        code = request.GET.get("code")
+        request_uri = f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={kakao_secret}&redirect_uri={kakao_redirect_uri}&code={code}"
+        response = requests.post(request_uri)
+        access_token = response.json().get("access_token")
+        user_info = requests.get(
+            "https://kapi.kakao.com/v2/user/me",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        user_info = user_info.json()
+        userprofile_info = user_info.get('kakao_account').get('profile')
+        try:
+            user = User.objects.get(username=user_info.get("id"))
+        except User.DoesNotExist:
+            user_data = {
+                "username": user_info.get("id"),
+                "password": "social_login_password",
+            }
+            user_serializer = UserSerializer(data=user_data)
+            if user_serializer.is_valid(raise_exception=True):
+                user_serializer.validated_data["password"] = make_password(
+                    user_serializer.validated_data["password"]
+                )
+                user = user_serializer.save()
+            user_profile = UserProfile.objects.create(
+                user=user,
+                is_social_login=True,
+                nickname=userprofile_info.get("nickname"),
+                profile_pic=userprofile_info.get("profile_image_url"),
+            )
+        return set_token_on_response_cookie(user, status_code=status.HTTP_200_OK)
