@@ -13,6 +13,7 @@ from ProfilePic.models import ProfilePic
 import requests
 from django.conf import settings
 import json
+import random
 from django.shortcuts import redirect
 kakao_secret = settings.KAKAO_SECRET_KEY
 kakao_redirect_uri = settings.KAKAO_REDIRECT_URI
@@ -177,10 +178,15 @@ class KakaoSignInCallbackView(APIView):
                     user_serializer.validated_data["password"]
                 )
                 user = user_serializer.save()
+
+            profile_pic_id = random.randint(1,7)
+            profile_pic = ProfilePic.objects.filter(id=profile_pic_id)
+
             user_profile = UserProfile.objects.create(
                 user=user,
                 is_social_login=True,
                 nickname=userprofile_info.get("nickname"),
-                profile_pic=userprofile_info.get("profile_image_url"),
+                profile_pic=profile_pic.first(),
             )
         return set_token_on_response_cookie(user, status_code=status.HTTP_200_OK)
+
