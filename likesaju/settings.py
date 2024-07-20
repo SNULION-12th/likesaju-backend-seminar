@@ -30,6 +30,8 @@ environ.Env.read_env(
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
+KAKAO_SECRET_KEY = env('KAKAO_SECRET_KEY') 
+KAKAO_REDIRECT_URI = env('KAKAO_REDIRECT_URI')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -47,6 +49,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'drf_yasg',
+    'ProfilePic',
+    'UserProfile',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -135,5 +141,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES' : (
         'rest_framework.permissions.AllowAny',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': ( 
+        'rest_framework_simplejwt.authentication.JWTAuthentication', 
     )
 }
+
+from datetime import timedelta 
+REST_USE_JWT = True 
+SIMPLE_JWT = {  'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30), 
+                'REFRESH_TOKEN_LIFETIME': timedelta(days=1), 
+                'ROTATE_REFRESH_TOKENS': True, 
+                'BLACKLIST_AFTER_ROTATION': True, 
+                'AUTH_HEADER_TYPES': ('Bearer', ), 
+                'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken', ), 
+                'ACCESS_TOKEN': 'access_token', 
+                'REFRESH_TOKEN': 'refresh_token', 
+            }
