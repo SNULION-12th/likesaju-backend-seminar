@@ -16,3 +16,8 @@ class ProfilePicListView(APIView):
         serializer = ProfilePicSerializer(profilepic)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    def get(self, request):
+        profilepic = ProfilePic.objects.all()
+        serializer = ProfilePicSerializer(profilepic, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
