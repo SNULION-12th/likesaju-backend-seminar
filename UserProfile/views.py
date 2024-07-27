@@ -154,7 +154,7 @@ class KakaoSignInView(APIView):
 
 
 class KakaoSignInCallbackView(APIView):
-    def get(self, request):
+    def post(self, request):
         code = request.GET.get("code")
         request_uri = f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={kakao_secret}&redirect_uri={kakao_redirect_uri}&code={code}"
         response = requests.post(request_uri)
