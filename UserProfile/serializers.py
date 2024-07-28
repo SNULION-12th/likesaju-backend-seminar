@@ -8,15 +8,6 @@ class UserSerializer(ModelSerializer):
         model = User
         fields = ["id", "username", "password"]
 
-class TokenRefreshRequestSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
-
-class SignUpRequestSerializer(serializers.Serializer):
-    password = serializers.CharField()
-    username = serializers.CharField()
-    nickname = serializers.CharField()
-    profilepic_id = serializers.IntegerField()
-
 class UserProfileSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)
 
