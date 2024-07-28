@@ -15,3 +15,7 @@ class UserProfileSerializer(ModelSerializer):
         model = UserProfile
         fields = "__all__"
 
+class UserProfileSerializerForUpdate(ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ["nickname", "profilepic_id"]
