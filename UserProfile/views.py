@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import make_password
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from .models import UserProfile
 from ProfilePic.models import ProfilePic
 import requests
@@ -76,7 +77,8 @@ class TokenRefreshView(APIView):
         operation_id="토큰 재발급",
         operation_description="access 토큰을 재발급 받습니다.",
         request_body=TokenRefreshRequestSerializer,
-        responses={200: UserProfileSerializerForUpdate, 400: "Bad Request", 401: "Unauthorized"},
+        responses={200: UserSerializer, 400: "Bad Request", 401: "Unauthorized"},
+        manual_parameters=[openapi.Parameter("Authorization", openapi.IN_HEADER, description="access token", type=openapi.TYPE_STRING)]
     )
     def post(self, request):
         refresh_token = request.data.get("refresh")
@@ -102,6 +104,7 @@ class SignOutView(APIView):
         operation_id="로그아웃",
         operation_description="로그아웃을 진행합니다.",
         responses={204: "No Content", 400: "Bad Request", 401: "Unauthorized"},
+        manual_parameters=[openapi.Parameter("Authorization", openapi.IN_HEADER, description="access token", type=openapi.TYPE_STRING)]
     )
     def post(self, request):
 
