@@ -133,6 +133,23 @@ class UserProfileDetailView(APIView):
         user_profile = UserProfile.objects.get(user_id=user_id)
         serializer = UserProfileSerializer(user_profile)
         return Response(serializer.data)
+    
+    def put(self, request, user_id):
+        try:
+            user_profile = UserProfile.objects.get(user_id=user_id)
+        except: 
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        if not request.data['profilepic_id'] or not request.data['nickname']:
+            return Response({"detail": "[title, description] fields missing."})
+        profilepic_id = request.data.get("profilepic_id")
+        user_profile.profilepic_id = ProfilePic.objects.get(id=profilepic_id)
+        user_profile.nickname = request.data.get("nickname")
+        user_profile.save()
+        serializer = UserProfileSerializer(user_profile, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(serializer.data)
+
 
 ### 추후 삭제 예정
 class KakaoSignInView(APIView):
