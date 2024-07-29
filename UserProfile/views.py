@@ -19,12 +19,13 @@ from django.shortcuts import redirect
 kakao_secret = settings.KAKAO_SECRET_KEY
 kakao_redirect_uri = settings.KAKAO_REDIRECT_URI
 
-from .serializers import UserSerializer, TokenRefreshRequestSerializer, SignUpRequestSerializer, UserProfileSerializer
+from .serializers import UserSerializer, UserProfileSerializer, UserProfileSerializerForUpdate
+from .request_serializers import SignUpRequestSerializer, SignInRequestSerializer, TokenRefreshRequestSerializer
 
 def set_token_on_response_cookie(user, status_code) -> Response:
     token = RefreshToken.for_user(user)
     user_profile = UserProfile.objects.get(user=user)
-    serialized_data = UserProfileSerializer(user_profile).data
+    serialized_data = UserProfileSerializerForUpdate(user_profile).data
     res = Response(serialized_data, status=status_code)
     res.set_cookie("refresh_token", value=str(token), httponly=True)
     res.set_cookie("access_token", value=str(token.access_token), httponly=True)
@@ -36,17 +37,9 @@ class SignUpView(APIView):
         operation_id="회원가입",
         operation_description="회원가입을 진행합니다.",
         request_body=SignUpRequestSerializer,
-        responses={201: UserProfileSerializer, 400: "Bad Request"},
+        responses={201: UserProfileSerializerForUpdate, 400: "Bad Request"},
     )
     def post(self, request):
-        nickname = request.data.get("nickname")
-        profile_pic_id = request.data.get("profilepic_id")
-        
-        if not nickname or not profile_pic_id:
-            return Response(
-                {"message": "nickname or profilepic_id is missing"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         
         user_serializer = UserSerializer(data=request.data)
         if user_serializer.is_valid(raise_exception=True):
@@ -55,18 +48,9 @@ class SignUpView(APIView):
             )
             user = user_serializer.save()
             user.save()
-        
-        profile_pic = ProfilePic.objects.filter(id=profile_pic_id)
-
-        if not profile_pic.exists():
-            return Response(
-                {"message": "ProfilePic not found"}, status=status.HTTP_404_NOT_FOUND
-            )
 
         UserProfile.objects.create(
-            user=user,
-            nickname=nickname,
-            profilepic_id=profile_pic.first(),
+            user=user
         )
 
         return set_token_on_response_cookie(user, status_code=status.HTTP_201_CREATED)
@@ -75,8 +59,8 @@ class SignInView(APIView):
     @swagger_auto_schema(
         operation_id="로그인",
         operation_description="로그인을 진행합니다.",
-        request_body=UserSerializer,
-        responses={200: UserSerializer, 404: "Not Found", 400: "Bad Request"},
+        request_body=SignInRequestSerializer,
+        responses={200: UserProfileSerializerForUpdate, 404: "Not Found", 400: "Bad Request"},
     )
     def post(self, request):
         user = User.objects.filter(username=request.data["username"]).first()
@@ -93,7 +77,7 @@ class TokenRefreshView(APIView):
         operation_id="토큰 재발급",
         operation_description="access 토큰을 재발급 받습니다.",
         request_body=TokenRefreshRequestSerializer,
-        responses={200: UserSerializer},
+        responses={200: UserSerializer, 400: "Bad Request", 401: "Unauthorized"},
         manual_parameters=[openapi.Parameter("Authorization", openapi.IN_HEADER, description="access token", type=openapi.TYPE_STRING)]
     )
     def post(self, request):
@@ -119,7 +103,7 @@ class SignOutView(APIView):
     @swagger_auto_schema(
         operation_id="로그아웃",
         operation_description="로그아웃을 진행합니다.",
-        responses={204: "No Content"},
+        responses={204: "No Content", 400: "Bad Request", 401: "Unauthorized"},
         manual_parameters=[openapi.Parameter("Authorization", openapi.IN_HEADER, description="access token", type=openapi.TYPE_STRING)]
     )
     def post(self, request):
@@ -150,6 +134,7 @@ class UserProfileDetailView(APIView):
         serializer = UserProfileSerializer(user_profile)
         return Response(serializer.data)
 
+### 추후 삭제 예정
 class KakaoSignInView(APIView):
     def get(self, request):
         request_uri = f"https://kauth.kakao.com/oauth/authorize?client_id={kakao_secret}&redirect_uri={kakao_redirect_uri}&response_type=code"
@@ -158,16 +143,21 @@ class KakaoSignInView(APIView):
 
 class KakaoSignInCallbackView(APIView):
     def post(self, request):
-        code = request.GET.get("code")
+        ### 프론트로 들어온 code를 받아서 카카오로부터 access_token을 받아옴
+        code = request.GET.get("code") # 쿼리스트링으로 구현되어 있지만 나중에 body로 바뀔 수도...
         request_uri = f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={kakao_secret}&redirect_uri={kakao_redirect_uri}&code={code}"
         response = requests.post(request_uri)
         access_token = response.json().get("access_token")
+
+        ### 카카오로부터 받은 access_token을 이용해 카카오톡 유저 정보를 받아옴
         user_info = requests.get(
             "https://kapi.kakao.com/v2/user/me",
             headers={"Authorization": f"Bearer {access_token}"},
         )
         user_info = user_info.json()
-        userprofile_info = user_info.get('kakao_account').get('profile')
+
+        ### 카카오 로그인을 통해 받아온 정보로 Django db에 유저 생성 및 자체 토큰 발급
+        ### 유저가 없으면 생성(회원가입), 있으면 토큰 발급만(로그인)
         try:
             user = User.objects.get(username=user_info.get("id"))
         except User.DoesNotExist:
@@ -182,14 +172,9 @@ class KakaoSignInCallbackView(APIView):
                 )
                 user = user_serializer.save()
 
-            profile_pic_id = random.randint(1,7)
-            profile_pic = ProfilePic.objects.filter(id=profile_pic_id)
-
-            user_profile = UserProfile.objects.create(
+            UserProfile.objects.create(
                 user=user,
                 is_social_login=True,
-                nickname=userprofile_info.get("nickname"),
-                profile_pic=profile_pic.first(),
             )
         return set_token_on_response_cookie(user, status_code=status.HTTP_200_OK)
 
