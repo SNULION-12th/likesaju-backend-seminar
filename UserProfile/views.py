@@ -140,7 +140,7 @@ class UserProfileDetailView(APIView):
         except: 
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         if not request.data['profilepic_id'] or not request.data['nickname']:
-            return Response({"detail": "[title, description] fields missing."})
+            return Response({"detail": "[profilepic_id, nickname] fields missing."})
         profilepic_id = request.data.get("profilepic_id")
         user_profile.profilepic_id = ProfilePic.objects.get(id=profilepic_id)
         user_profile.nickname = request.data.get("nickname")
