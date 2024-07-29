@@ -181,3 +181,18 @@ SIMPLE_JWT = {  'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
                 'ACCESS_TOKEN': 'access_token', 
                 'REFRESH_TOKEN': 'refresh_token', 
             }
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'BearerAuth': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': "JWT Token"
+        }
+    },
+    'SECURITY_REQUIREMENTS': [{
+        'BearerAuth': []
+    }]
+}
