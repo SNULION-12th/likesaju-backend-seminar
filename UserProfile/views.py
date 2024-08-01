@@ -151,6 +151,13 @@ class UserProfileDetailView(APIView):
         return Response(serializer.data)
 
 
+class CheckUsernameView(APIView):
+    def post(self, request):
+        username = request.data.get("username")
+        if User.objects.filter(username=username).exists():
+            return Response({"message": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": "Username is available"}, status=status.HTTP_200_OK)
+
 ### 추후 삭제 예정
 class KakaoSignInView(APIView):
     def get(self, request):
