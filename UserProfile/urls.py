@@ -10,7 +10,7 @@ urlpatterns = [
     path("signout/", SignOutView.as_view()),
     path("refresh/", TokenRefreshView.as_view()),
     path("userinfo/", UserProfileListView.as_view()),
-    path("userinfo/<int:user_id>/", UserProfileDetailView.as_view()),
+    path("me/", UserProfileDetailView.as_view()),
     path("kakao/signin/", KakaoSignInView.as_view()),
     path("kakao/callback/", KakaoSignInCallbackView.as_view()),
     path("check/", CheckUsernameView.as_view()),

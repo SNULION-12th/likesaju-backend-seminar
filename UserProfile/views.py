@@ -129,26 +129,36 @@ class UserProfileListView(APIView):
         return Response(serializer.data)
     
 class UserProfileDetailView(APIView):
-    def get(self, request, user_id):
-        user_profile = UserProfile.objects.get(user_id=user_id)
-        serializer = UserProfileSerializer(user_profile)
-        return Response(serializer.data)
-    
-    def put(self, request, user_id):
+    def get(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"detail": "please signin"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
-            user_profile = UserProfile.objects.get(user_id=user_id)
-        except: 
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        if not request.data['profilepic_id'] or not request.data['nickname']:
-            return Response({"detail": "[profilepic_id, nickname] fields missing."})
-        profilepic_id = request.data.get("profilepic_id")
-        user_profile.profilepic_id = ProfilePic.objects.get(id=profilepic_id)
-        user_profile.nickname = request.data.get("nickname")
-        user_profile.save()
-        serializer = UserProfileSerializer(user_profile, data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-        return Response(serializer.data)
+            user_profile = UserProfile.objects.get(user=user)
+            serializer = UserProfileSerializer(user_profile)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist:
+            return Response({"detail": "UserProfile Not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    def put(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"detail": "please signin"}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            user_profile = UserProfile.objects.get(user=user)
+            profilepic_id = request.data.get("profilepic_id")
+            nickname = request.data.get("nickname")
+            if not profilepic_id or not nickname:
+                return Response({"detail": "[profilepic_id, nickname] fields missing."}, status=status.HTTP_400_BAD_REQUEST)
+            user_profile.profilepic_id = ProfilePic.objects.get(id=profilepic_id)
+            user_profile.nickname = nickname
+            user_profile.save()
+            serializer = UserProfileSerializerForUpdate(user_profile)
+            # if serializer.is_valid(raise_exception=True):
+            #     serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist:
+            return Response({"detail": "UserProfile Not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
 class CheckUsernameView(APIView):
