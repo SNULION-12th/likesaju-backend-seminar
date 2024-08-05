@@ -129,10 +129,16 @@ class UserProfileListView(APIView):
         return Response(serializer.data)
     
 class UserProfileDetailView(APIView):
-    def get(self, request, user_id):
-        user_profile = UserProfile.objects.get(user_id=user_id)
-        serializer = UserProfileSerializer(user_profile)
-        return Response(serializer.data)
+    def get(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"detail": "please signin"}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            user_profile = UserProfile.objects.get(user=user)
+            serializer = UserProfileSerializer(user_profile)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist:
+            return Response({"detail": "UserProfile Not found."}, status=status.HTTP_404_NOT_FOUND)
     
     def put(self, request, user_id):
         try:
