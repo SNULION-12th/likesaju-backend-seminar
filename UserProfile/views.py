@@ -154,8 +154,8 @@ class UserProfileDetailView(APIView):
             user_profile.nickname = nickname
             user_profile.save()
             serializer = UserProfileSerializerForUpdate(user_profile)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
+            # if serializer.is_valid(raise_exception=True):
+            #     serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist:
             return Response({"detail": "UserProfile Not found."}, status=status.HTTP_404_NOT_FOUND)
