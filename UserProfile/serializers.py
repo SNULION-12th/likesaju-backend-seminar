@@ -18,4 +18,4 @@ class UserProfileSerializer(ModelSerializer):
 class UserProfileSerializerForUpdate(ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ["nickname", "profilepic_id"]
+        fields = ["nickname", "profilepic_id", "id"]
