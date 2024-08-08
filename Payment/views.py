@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Payment
+from UserProfile.models import UserProfile
 import requests
 import json
 
@@ -71,8 +72,9 @@ class PayApproveView(APIView):
 
         if response.status_code == 200:
             pay_hist.pay_status = 'approved'
-            user.remaining_points += pay_hist.point
+            userprofile = UserProfile.objects.get(user=user)
+            userprofile.remaining_points+= pay_hist.point
             pay_hist.save()
-            user.save()
+            userprofile.save()
 
         return Response(response.json(), status=response.status_code)
