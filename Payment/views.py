@@ -73,7 +73,7 @@ class PayApproveView(APIView):
         if response.status_code == 200:
             pay_hist.pay_status = 'approved'
             userprofile = UserProfile.objects.get(user=user)
-            userprofile.remaining_points+= pay_hist.point
+            userprofile.remaining_points+= int(pay_hist.point)
             pay_hist.save()
             userprofile.save()
 
