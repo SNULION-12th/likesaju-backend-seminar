@@ -39,7 +39,7 @@ class PayReadyView(APIView):
         response_data = response.json()
 
         if response.status_code == 200:
-            KakaoPay.objects.create(
+            Payment.objects.create(
                 tid=response_data['tid'],
                 partner_order_id=request.data['partner_order_id'],
                 partner_user_id=request.data['partner_user_id'],
@@ -58,7 +58,7 @@ class PayApproveView(APIView):
 
         pg_token = request.data['pg_token']
         tid = request.data['tid']
-        pay_hist = KakaoPay.objects.get(tid=tid)
+        pay_hist = Payment.objects.get(tid=tid)
         pay_data = {
             'cid': cid,
             'tid': tid,
