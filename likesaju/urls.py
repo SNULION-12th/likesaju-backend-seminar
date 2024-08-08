@@ -38,4 +38,5 @@ urlpatterns = [
     path('api/user/', include('UserProfile.urls')),
     path('api/profilepic/', include('ProfilePic.urls')),
     path('api/point/', include('Point.urls')),
+    path("api/payment/", include("Payment.urls")),
 ]
