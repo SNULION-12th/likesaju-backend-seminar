@@ -159,6 +159,26 @@ class UserProfileDetailView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist:
             return Response({"detail": "UserProfile Not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+class RemainingPointDeductView(APIView):
+    def put(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"detail": "please signin"}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            user_profile = UserProfile.objects.get(user=user)
+            remaining_points = user_profile.remaining_points
+            point_to_deduct = request.data.get("point_to_deduct")
+            if not point_to_deduct:
+                return Response({"detail": "point_to_deduct field missing."}, status=status.HTTP_400_BAD_REQUEST)
+            if remaining_points < point_to_deduct:
+                return Response({"detail": "Not enough points."}, status=status.HTTP_400_BAD_REQUEST)
+            user_profile.remaining_points -= point_to_deduct
+            user_profile.save()
+            serializer = UserProfileSerializerForUpdate(user_profile)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist:
+            return Response({"detail": "UserProfile Not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
 class CheckUsernameView(APIView):
