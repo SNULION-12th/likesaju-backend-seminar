@@ -22,6 +22,10 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from rest_framework.routers import DefaultRouter
+
+from webchat.views import MessageViewSet
+
 schema_view = get_schema_view(
     openapi.Info(
         title="LIKESAJU API",
@@ -32,6 +36,9 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
+router = DefaultRouter()
+router.register("api/messages", MessageViewSet, basename="message")
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
@@ -39,4 +46,4 @@ urlpatterns = [
     path('api/profilepic/', include('ProfilePic.urls')),
     path('api/point/', include('Point.urls')),
     path("api/payment/", include("Payment.urls")),
-]
+] + router.urls
