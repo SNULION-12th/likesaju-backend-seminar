@@ -12,5 +12,20 @@ import os
 from django.core.asgi import get_asgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'likesaju.settings')
+# application = get_asgi_application()
+# 프로토콜에 따라 앱을 분리하기 위해 삭제
 
-application = get_asgi_application()
+
+# siwon added for websocket protocol routing 0811
+# initialize django application object
+django_application = get_asgi_application()
+# init 이후에 url import  
+from  . import urls 
+from channels.routing import ProtocolTypeRouter, URLRouter
+
+application = ProtocolTypeRouter(
+    {
+        "http" : django_application,
+        "websocket" : URLRouter( urls.websocket_urlpatterns )
+    }
+)

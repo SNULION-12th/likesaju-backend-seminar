@@ -24,7 +24,11 @@ from drf_yasg import openapi
 
 from rest_framework.routers import DefaultRouter
 
+# siwon added 0811
 from webchat.views import MessageViewSet
+# siwon added 0812
+from webchat.consumer import WebChatConsumer
+
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -36,6 +40,7 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
+# siwon added 0811
 router = DefaultRouter()
 router.register("api/messages", MessageViewSet, basename="message")
 
@@ -47,3 +52,10 @@ urlpatterns = [
     path('api/point/', include('Point.urls')),
     path("api/payment/", include("Payment.urls")),
 ] + router.urls
+
+# siwon added for websocket routing 0811
+# 웹소켓 요청은 view가 아닌 consumer로 forward
+# 웹소켓 엔드포인트 설정
+websocket_urlpatterns = [
+    path( "ws/test/" ,  WebChatConsumer.as_asgi())
+]
