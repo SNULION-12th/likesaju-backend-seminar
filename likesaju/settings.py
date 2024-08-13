@@ -50,14 +50,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # External
     'drf_yasg',
+    "drf_spectacular",
+    "rest_framework",
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    # Internal
+    'corsheaders',
     'ProfilePic',
     'UserProfile',
     'Point',
     'Payment',
-    'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
-    'corsheaders',
     'webchat',
 ]
 
@@ -200,4 +204,8 @@ SWAGGER_SETTINGS = {
     'SECURITY_REQUIREMENTS': [{
         'BearerAuth': []
     }]
+}
+
+CHANNEL_LAYERS = {
+    "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
 }
