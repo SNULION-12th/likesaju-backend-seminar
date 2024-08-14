@@ -25,7 +25,7 @@ from .request_serializers import SignUpRequestSerializer, SignInRequestSerialize
 def set_token_on_response_cookie(user, status_code) -> Response:
     token = RefreshToken.for_user(user)
     user_profile = UserProfile.objects.get(user=user)
-    serialized_data = UserProfileSerializerForUpdate(user_profile).data
+    serialized_data = UserProfileSerializer(user_profile).data
     res = Response(serialized_data, status=status_code)
     res.set_cookie("refresh_token", value=str(token))
     res.set_cookie("access_token", value=str(token.access_token))
@@ -37,7 +37,7 @@ class SignUpView(APIView):
         operation_id="회원가입",
         operation_description="회원가입을 진행합니다.",
         request_body=SignUpRequestSerializer,
-        responses={201: UserProfileSerializerForUpdate, 400: "Bad Request"},
+        responses={201: UserProfileSerializer, 400: "Bad Request"},
     )
     def post(self, request):
         
@@ -60,7 +60,7 @@ class SignInView(APIView):
         operation_id="로그인",
         operation_description="로그인을 진행합니다.",
         request_body=SignInRequestSerializer,
-        responses={200: UserProfileSerializerForUpdate, 404: "Not Found", 400: "Bad Request"},
+        responses={200: UserProfileSerializer, 404: "Not Found", 400: "Bad Request"},
     )
     def post(self, request):
         user = User.objects.filter(username=request.data["username"]).first()
