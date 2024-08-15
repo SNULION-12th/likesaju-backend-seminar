@@ -34,6 +34,7 @@ KAKAO_SECRET_KEY = env('KAKAO_SECRET_KEY')
 KAKAO_REDIRECT_URI = env('KAKAO_REDIRECT_URI')
 CID = env('CID')
 KAKAO_PAY_KEY = env('KAKAO_PAY_KEY')
+OPENAI_API_KEY = env('OPENAI_API_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
