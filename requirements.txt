@@ -8,6 +8,7 @@ async-timeout==4.0.3
 attrs==24.2.0
 certifi==2024.7.4
 charset-normalizer==3.3.2
+dataclasses-json==0.6.7
 distro==1.9.0
 Django==4.2.8
 django-cors-headers==4.4.0
@@ -26,11 +27,14 @@ jiter==0.5.0
 jsonpatch==1.33
 jsonpointer==3.0.0
 langchain==0.2.14
+langchain-community==0.2.12
 langchain-core==0.2.32
 langchain-openai==0.1.21
 langchain-text-splitters==0.2.2
 langsmith==0.1.99
+marshmallow==3.21.3
 multidict==6.0.5
+mypy-extensions==1.0.0
 numpy==1.26.4
 openai==1.40.6
 orjson==3.10.7
@@ -48,6 +52,7 @@ sqlparse==0.5.1
 tenacity==8.5.0
 tiktoken==0.7.0
 tqdm==4.66.5
+typing-inspect==0.9.0
 typing_extensions==4.12.2
 uritemplate==4.1.1
 urllib3==2.2.2
