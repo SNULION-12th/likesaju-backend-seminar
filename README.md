@@ -1,5 +1,12 @@
 # 🦁 멋쟁이 사주처럼 🦁
 
+중요!!! requirements에 추가 안됨 ㅜㅠ 
+pip install 'uvicorn[standard]' 하세요!!
+
+중요!! uvicorn server 켜는 command
+uvicorn likesaju.asgi:application --port 8000 --workers 4 --log-level debug --reload
+
+
 시원 0811)
 webchat application 생성
 webchat에 모델 생성 : Conversation, Messages
@@ -9,9 +16,6 @@ likesaju url에 webchat messageView 로 가는 url 추가
 시원 해야할 것)
 messageView 테스트 API 만들기
 웹소켓 프로토콜용 view 만들기 (채널 생성 및 채팅)
-
-uvicorn server command
-uvicorn likesaju.asgi:application --port 8000 --workers 4 --log-level debug --reload
 
 시원 0812)
 ./manage.py startapp webchat
@@ -27,11 +31,10 @@ http를 사용한다면, 서버에게 새로운 메세지가 왔는지 요청하
 
 웹소켓 프로토콜을 사용한다면 챗서버에 속한 사람이 누구인지 기억할 수 있으며, 채팅방에 속한 사람에게 바로 메세지를 보낼 수 있다. (서버에게 묻는 과정 없이도) 
 
-pip install 'uvicorn[standard]' 하세요!!
+
 
 프론트엔드에서 웹소켓 요청 테스트 )
 npm => react-use-websocket 사용
-
 
 import useWebSocket from "react-use-websocket";
 // const socketUrl = `ws://127.0.0.1:8000/${serverId}/${channelId}`
