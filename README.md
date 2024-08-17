@@ -59,3 +59,12 @@ const { } = useWebSocket(socketUrl, {
 - 모델 변경되었으므로 python manage.py migrate , python manage.py makemigrations
 - 유비콘 서버 켜지 말고 그냥 python manage.py runserver
 - http://127.0.0.1:8000/swagger/
+
+- ws 요청 테스트 (아직 테스트 안해봄)
+- 유비콘 서버 켜서 
+- uvicorn likesaju.asgi:application --port 8000 --workers 4 --log-level debug --reload
+- ws://127.0.0.1:8000/ws/test/
+- 메세지 보낼때 이제 channel_id 명시해야함
+message = content.get("message")
+channel_id = content.get("channel_id")
+
