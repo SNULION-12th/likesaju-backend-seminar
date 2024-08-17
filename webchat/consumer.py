@@ -1,7 +1,7 @@
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 from django.contrib.auth import get_user_model
-from .models import Conversation, Message
+from .models import ChatRoom, Message
 User = get_user_model()
 
 class WebChatConsumer(JsonWebsocketConsumer):
@@ -29,10 +29,10 @@ class WebChatConsumer(JsonWebsocketConsumer):
         self.accept()
 
         # 사용자가 참가자로 포함된 모든 채팅방을 가져와서 그룹에 추가
-        conversations = Conversation.objects.filter(participants=self.user)
-        for conversation in conversations:
+        chatrooms = ChatRoom.objects.filter(participants=self.user)
+        for chatroom in chatrooms:
             async_to_sync(self.channel_layer.group_add)(
-                conversation.channel_id,
+                chatroom.channel_id,
                 self.channel_name
             )
 
@@ -53,7 +53,7 @@ class WebChatConsumer(JsonWebsocketConsumer):
         channel_id = content.get("channel_id")
 
         # 채팅방을 가져오거나 새로 생성
-        conversation, created = Conversation.objects.get_or_create(channel_id=channel_id)
+        chatroom, created = ChatRoom.objects.get_or_create(channel_id=channel_id)
 
         if created:
             # 채팅방이 새로 생성되었으면 self.user와 testuser를 참가자로 설정
@@ -66,8 +66,8 @@ class WebChatConsumer(JsonWebsocketConsumer):
                 }
             )
             if self.user:
-                conversation.participants.add(self.user)
-            conversation.participants.add(test_user)
+                chatroom.participants.add(self.user)
+            chatroom.participants.add(test_user)
 
             # 5개의 테스트 메시지를 생성
             messages_content = [
@@ -79,13 +79,13 @@ class WebChatConsumer(JsonWebsocketConsumer):
             ]
             for content in messages_content:
                 Message.objects.create(
-                    conversation=conversation,
+                    chatroom=chatroom,
                     sender=test_user,
                     content=content
                 )
 
         # 새 메시지를 생성하고, 그룹에 전송
-        new_message = Message.objects.create(conversation=conversation, sender=sender, content=message)
+        new_message = Message.objects.create(chatroom=chatroom, sender=sender, content=message)
         async_to_sync(self.channel_layer.group_send)(
             channel_id,
             {
@@ -104,10 +104,10 @@ class WebChatConsumer(JsonWebsocketConsumer):
 
     def disconnect(self, close_code):
         # 사용자가 참가자로 포함된 모든 채팅방에서 그룹을 제거
-        conversations = Conversation.objects.filter(participants=self.user)
-        for conversation in conversations:
+        chatrooms = ChatRoom.objects.filter(participants=self.user)
+        for chatroom in chatrooms:
             async_to_sync(self.channel_layer.group_discard)(
-                conversation.channel_id,
+                chatroom.channel_id,
                 self.channel_name
             )
         super().disconnect(close_code)

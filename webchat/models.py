@@ -6,14 +6,12 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 
-class Conversation(models.Model):
-    channel_id = models.CharField(max_length=255)
+class ChatRoom(models.Model):
     participants = models.ManyToManyField(get_user_model())
     created_at = models.DateTimeField(auto_now_add=True)
 
-
 class Message(models.Model):
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="message")
+    chatroom = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="message", default=1)
     sender = models.ForeignKey( User, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)

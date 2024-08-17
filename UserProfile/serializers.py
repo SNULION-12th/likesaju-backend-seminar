@@ -10,7 +10,6 @@ class UserSerializer(ModelSerializer):
 
 class UserProfileSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)
-
     class Meta:
         model = UserProfile
         fields = "__all__"
