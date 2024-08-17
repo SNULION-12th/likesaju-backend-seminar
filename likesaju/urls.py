@@ -25,7 +25,8 @@ from drf_yasg import openapi
 from rest_framework.routers import DefaultRouter
 
 # siwon added 0811
-from webchat.views import MessageViewSet
+from webchat.views import MessageViewSet, ConversationViewSet
+
 # siwon added 0812
 from webchat.consumer import WebChatConsumer
 
@@ -43,6 +44,8 @@ schema_view = get_schema_view(
 # siwon added 0811
 router = DefaultRouter()
 router.register("api/messages", MessageViewSet, basename="message")
+router.register('api/conversations', ConversationViewSet, basename='conversation')  # 추가된 부분
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
