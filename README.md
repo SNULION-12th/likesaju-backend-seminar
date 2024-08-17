@@ -56,7 +56,6 @@ const { } = useWebSocket(socketUrl, {
 
 
 - http 요청 테스트 
-- 모델 변경되었으므로 python manage.py migrate , python manage.py makemigrations 진헹
+- 모델 변경되었으므로 python manage.py migrate , python manage.py makemigrations
 - 유비콘 서버 켜지 말고 그냥 python manage.py runserver
 - http://127.0.0.1:8000/swagger/
-- 
