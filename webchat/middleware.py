@@ -24,7 +24,7 @@ class JWTAuthMiddleWare:
     def __init__(self, app):
         self.app = app
 
-    async def __call__(self, scope, recieve, send):
+    async def __call__(self, scope, receive, send):
         print("I am middleware")
         headers_dict = dict(scope["headers"])
         cookies_str = headers_dict.get(b"cookie", b"").decode()
@@ -34,4 +34,4 @@ class JWTAuthMiddleWare:
         scope["token"] = access_token
         scope["user"] = await get_user(scope)
 
-        return await self.app(scope, recieve, send)
+        return await self.app(scope, receive, send)

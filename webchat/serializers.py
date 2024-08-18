@@ -8,4 +8,4 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ["id", "conversation", "sender", "content", "timestamp"]
+        fields = ["id", "chatroom", "sender", "content", "timestamp"]
