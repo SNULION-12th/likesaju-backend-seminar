@@ -60,5 +60,5 @@ urlpatterns = [
 # 웹소켓 요청은 view가 아닌 consumer로 forward
 # 웹소켓 엔드포인트 설정
 websocket_urlpatterns = [
-    path( "ws/test/" ,  WebChatConsumer.as_asgi())
+    path( "" ,  WebChatConsumer.as_asgi())
 ]
