@@ -15,6 +15,7 @@ class UserProfileSerializer(ModelSerializer):
         fields = "__all__"
 
 class UserProfileSerializerForUpdate(ModelSerializer):
+    user = UserSerializer(read_only=True)
     class Meta:
         model = UserProfile
-        fields = ["nickname", "profilepic_id", "remaining_points"]
+        fields = ["user", "nickname", "profilepic_id", "remaining_points"]
