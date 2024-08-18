@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from .models import ChatRoom, Message
 from .schemas import list_message_docs
 from .serializers import MessageSerializer
-
+from django.db.models import Count, Q
 # 시원 추가
 from django.contrib.auth import get_user_model
 from django.utils import timezone  # timezone 가져오기
@@ -72,43 +72,74 @@ class ChatRoomViewSet(viewsets.ViewSet):
         }
     )
     def create(self, request):
+
+        # 요청을 보낸 사용자 찾기 (인증된 사용자만)
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "please signin"}, status=status.HTTP_401_UNAUTHORIZED
+            )
+        user = request.user
+        participant_id = request.data.get('user_id')
+        if not participant_id:
+            return Response({"detail": "user_id is missing."}, status=status.HTTP_400_BAD_REQUEST)
         
-        participant_id = request.data.get('user_id')  # 전달받은 participant의 user_id
-        user = request.user if request.user.is_authenticated else None  # 요청을 보낸 사용자
+        participant_group_ids = list({user.id, participant_id})
 
-        # 채팅방 생성
-        chatroom = ChatRoom.objects.create(
-            created_at=timezone.now()
-        )
-
-        # User 모델에서 participant와 user를 가져옴
-        if participant_id:
-            participant = User.objects.filter(id=participant_id).first()  # participant를 찾아서 추가
-            if participant:
-                chatroom.participants.add(participant)
-    
-        if user:
-            chatroom.participants.add(user)  # 요청한 사용자도 추가
-
-        # 모든 participants 가져오기
-        participants = []
-        for participant in chatroom.participants.all():
-            profile = {
-                "nickname": participant.userprofile.nickname if hasattr(participant, 'userprofile') else "default nickname",
-                "profilepic": {
-                    "id": participant.userprofile.profilepic_id.id if participant.userprofile.profilepic_id else 1,  # 기본값 설정
-                    "image_url": "default_image_url"  # 기본값 설정
+        try:
+            #유저가 만들고자 하는 채팅방이 이미 존재하는지 확인하여 이미 존재하는 경우 새로 만들지 않고, 해당 채팅방 정보를 전달
+            chatroom = ChatRoom.objects.annotate(
+                num_participants=Count('participants'),
+                num_matching=Count('participants', filter=Q(participants__id__in=participant_group_ids))
+            ).get(num_participants=len(participant_group_ids), num_matching=len(participant_group_ids))
+            print("chatroom already exists")
+            participants = []
+            for participant in chatroom.participants.all():
+                profile = {
+                    "nickname": participant.userprofile.nickname,
+                    "profilepic": {
+                        "id": participant.userprofile.profilepic_id.id,
+                        "imagelink": participant.userprofile.profilepic_id.imagelink
+                    } if participant.userprofile.profilepic_id else None
                 }
-            }
-            participants.append({
-                "id": participant.id,
-                "profile": profile
-            })
+                participants.append({
+                    "id": participant.id,
+                    "profile": profile
+                })
+        except ChatRoom.DoesNotExist:
+            # 채팅방 생성
+            chatroom = ChatRoom.objects.create(
+                created_at=timezone.now()
+            )
+
+            # User 모델에서 participant와 user를 가져옴
+            if participant_id:
+                participant = User.objects.get(id=participant_id) # participant를 찾아서 추가
+                if participant:
+                    chatroom.participants.add(participant)
+        
+            if user:
+                chatroom.participants.add(user)  # 요청한 사용자도 추가
+
+            # 모든 participants 가져오기
+            participants = []
+            for participant in chatroom.participants.all():
+                profile = {
+                    "nickname": participant.userprofile.nickname,
+                    "profilepic": {
+                        "id": participant.userprofile.profilepic_id.id,
+                        "imagelink": participant.userprofile.profilepic_id.imagelink
+                    } if participant.userprofile.profilepic_id else None
+                }
+                participants.append({
+                    "id": participant.id,
+                    "profile": profile
+                })
+            print("create new chatroom")
 
         response_data = {
-            'id': str(chatroom.id),
+            'id': chatroom.id,
             'participants': participants,
-            'last_message': ""  # 생성 시점에 last_message는 빈 문자열로 반환
+            'last_message': chatroom.message.all().order_by("-timestamp").first()
         }
 
         return Response(response_data, status=status.HTTP_201_CREATED)
@@ -118,7 +149,11 @@ class ChatRoomViewSet(viewsets.ViewSet):
     def list(self, request):
         
         # 요청을 보낸 사용자 찾기 (인증된 사용자만)
-        user = request.user if request.user.is_authenticated else None
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "please signin"}, status=status.HTTP_401_UNAUTHORIZED
+            )
+        user = request.user
         # ChatRoom이 하나도 없을 경우 
         if not ChatRoom.objects.exists():
             pass
@@ -134,9 +169,9 @@ class ChatRoomViewSet(viewsets.ViewSet):
                 
                 # profilepic 부분은 임의의 값으로 설정
                 profilepic_info = {
-                    "id": user_profile.profilepic_id.id if user_profile.profilepic_id else 0, 
-                    "image_url": "any value"
-                }
+                    "id": user_profile.profilepic_id.id, 
+                    "imagelink": user_profile.profilepic_id.imagelink
+                } if user_profile.profilepic_id else None
 
                 participant_info = {
                     "id": participant.id,
@@ -173,55 +208,15 @@ class MessageViewSet(viewsets.ViewSet):
     def list(self, request):
         chat_room_id = request.query_params.get("chat_room_id")  
         # 요청을 보낸 사용자 찾기 (인증된 사용자만)
-        user = request.user if request.user.is_authenticated else None
-        try:
-            chatroom = ChatRoom.objects.get(id=chat_room_id)
-        except ChatRoom.DoesNotExist:
-            # Test User를 찾거나 생성
-            test_user, created = User.objects.get_or_create(
-                id=999,
-                defaults={
-                    'username': 'testuser',
-                    'email': 'test@test.com',
-                    'password': 'testpassword',
-                }
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "please signin"}, status=status.HTTP_401_UNAUTHORIZED
             )
-            if created:
-                test_user.set_password('testpassword')
-                test_user.save()
-
-            # 새로운 ChatRoom 생성
-            chatroom, created = ChatRoom.objects.get_or_create(
-                id=chat_room_id,
-                defaults={
-                    'created_at': timezone.now()
-                }
-            )
-
-            if created:
-                # Test User와 요청을 보낸 사용자를 participants에 추가
-                chatroom.participants.add(test_user)
-                if user:
-                    chatroom.participants.add(user)
-
-                # 5개의 메시지 생성
-                messages_content = [
-                    "test message 1",
-                    "test message 2",
-                    "test message 3",
-                    "test message 4",
-                    "test message 5"
-                ]
-                
-                for content in messages_content:
-                    Message.objects.create(
-                        chatroom=chatroom,
-                        sender=test_user,
-                        content=content,
-                        timestamp=timezone.now()
-                    )
+        chatroom = ChatRoom.objects.get(id=chat_room_id)
+            
 
         # 해당 ChatRoom의 모든 메시지 가져오기
         messages = chatroom.message.all()
+        print(messages)
         serializer = MessageSerializer(messages, many=True)
         return Response(serializer.data)
