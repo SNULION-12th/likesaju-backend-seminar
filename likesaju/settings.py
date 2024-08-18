@@ -86,6 +86,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
+SESSION_COOKIE_SAMESITE = None
+CSRF_COOKIE_SAMESITE= None
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = [
@@ -189,6 +192,7 @@ SIMPLE_JWT = {  'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
                 'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken', ), 
                 'ACCESS_TOKEN': 'access_token', 
                 'REFRESH_TOKEN': 'refresh_token', 
+                "JWT_COOKIE_SAMESITE": "None",
             }
 
 SWAGGER_SETTINGS = {
@@ -205,7 +209,6 @@ SWAGGER_SETTINGS = {
         'BearerAuth': []
     }]
 }
-
 CHANNEL_LAYERS = {
     "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
 }
