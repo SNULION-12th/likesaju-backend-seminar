@@ -82,6 +82,8 @@ class ChatView(APIView):
         
         chain = prompt | conv_model | output_parser
 
-        result = chain.invoke({'data': data})
-        
-        return Response(result, status=status.HTTP_200_OK)
+        try:
+            result = chain.invoke({'data': data})
+            return Response(result, status=status.HTTP_200_OK)
+        except:
+            return Response({"error": "일시적인 오류로 결과를 불러올 수 없습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
