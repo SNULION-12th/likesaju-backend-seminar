@@ -5,13 +5,12 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from langchain_community.llms import HuggingFaceHub
+from langchain.chat_models import ChatOpenAI
+
+# from langchain_community.llms import HuggingFaceHub
 from langchain_core.prompts import PromptTemplate
-from langchain.chains import LLMChain
 
 from django.conf import settings
-
-### 1안: PydanticOutputParser를 사용하여 response를 자동 파싱하는 방법 (응답이 나오다가 알 수 없는 이유로 계속 잘려서 지금은 조금 엉성함, 하지만 프롬프팅을 잘 하거나 응답을 좀 잘게 쪼개면 가능할듯...)
 
 from langchain_core.output_parsers import JsonOutputParser
 from pydantic import BaseModel, Field
@@ -35,15 +34,21 @@ class ChatView(APIView):
     def post(self, request):
 
         data = request.data['data']
-        huggingface_key = settings.HUGGINGFACEHUB_API_KEY
+        openai_key = settings.OPENAI_API_KEY
 
         # 모델 생성
-        model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-        conv_model = HuggingFaceHub(
-            repo_id=model_id,
-            huggingfacehub_api_token=huggingface_key,
-            model_kwargs={'temperature': 0.75, "return_full_text" : False,'max_new_tokens': 800}
+        model_id = "gpt-3.5-turbo"
+        model = ChatOpenAI(
+            model_name=model_id,
+            openai_api_key=openai_key,
         )
+
+#         model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
+#         model = HuggingFaceHub(
+#             repo_id=model_id,
+#             huggingfacehub_api_token=huggingface_key,
+#             model_kwargs={'temperature': 0.75, "return_full_text" : False,'max_new_tokens': 800}
+#         )
 
         output_parser = JsonOutputParser(pydantic_object=FortuneTypes)
         format_instructions = output_parser.get_format_instructions()
@@ -80,7 +85,7 @@ class ChatView(APIView):
             partial_variables={'format_instructions': format_instructions}
         )
         
-        chain = prompt | conv_model | output_parser
+        chain = prompt | model | output_parser
 
         try:
             result = chain.invoke({'data': data})
