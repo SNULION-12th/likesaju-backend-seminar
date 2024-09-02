@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'UserProfile',
     'Point',
     'Payment',
+    'SajuAI',
     'webchat',
 ]
 
