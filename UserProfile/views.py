@@ -12,14 +12,11 @@ from drf_yasg import openapi
 from .models import UserProfile
 import requests
 from django.conf import settings
-import json
-import random
-from django.shortcuts import redirect
 kakao_secret = settings.KAKAO_SECRET_KEY
 kakao_redirect_uri = settings.KAKAO_REDIRECT_URI
 
 from .serializers import UserSerializer, UserProfileSerializer, UserProfileSerializerForUpdate
-from .request_serializers import SignUpRequestSerializer, SignInRequestSerializer, TokenRefreshRequestSerializer
+from .request_serializers import SignUpRequestSerializer, SignInRequestSerializer, TokenRefreshRequestSerializer, UserProfileUpdateRequestSerializer
 
 def set_token_on_response_cookie(user, status_code) -> Response:
     token = RefreshToken.for_user(user)
@@ -39,8 +36,6 @@ class SignUpView(APIView):
         responses={201: UserProfileSerializer, 400: "Bad Request"},
     )
     def post(self, request):
-        print("여기!!")
-        print(request.data)
         user_serializer = UserSerializer(data=request.data)
         if user_serializer.is_valid(raise_exception=True):
             user_serializer.validated_data["password"] = make_password(
@@ -123,15 +118,29 @@ class SignOutView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class UserProfileListView(APIView):
+    @swagger_auto_schema(
+        operation_id="유저 정보 확인",
+        operation_description="등록된 모든 유저 정보를 가져옵니다",
+        request_body=None,
+        responses={200: UserProfileSerializer(many=True), 401: "please signin"},
+        manual_parameters=[openapi.Parameter("Authorization", openapi.IN_HEADER, description="access token", type=openapi.TYPE_STRING)]
+    )
     def get(self, request):
         user = request.user
         if not user.is_authenticated:
             return Response({"detail": "please signin"}, status=status.HTTP_401_UNAUTHORIZED)
         user_profile = UserProfile.objects.all()
         serializer = UserProfileSerializer(user_profile, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
 class UserProfileDetailView(APIView):
+    @swagger_auto_schema(
+        operation_id="유저 정보 확인",
+        operation_description="토큰을 기반으로, 유저 세부 정보를 가져옵니다.",
+        request_body=None,
+        responses={200: UserProfileSerializer, 404: "UserProfile Not found.", 401: "please signin"},
+        manual_parameters=[openapi.Parameter("Authorization", openapi.IN_HEADER, description="access token", type=openapi.TYPE_STRING)]
+    )
     def get(self, request):
         user = request.user
         if not user.is_authenticated:
@@ -143,6 +152,13 @@ class UserProfileDetailView(APIView):
         except UserProfile.DoesNotExist:
             return Response({"detail": "UserProfile Not found."}, status=status.HTTP_404_NOT_FOUND)
     
+    @swagger_auto_schema(
+        operation_id="유저 정보 수정",
+        operation_description="유저 개인 프로필 정보(닉네임, 프로필 사진)를 수정합니다.",
+        request_body=UserProfileUpdateRequestSerializer,
+        responses={200: UserProfileSerializer, 400: "[profilepic_id, nickname] fields missing.", 401: "please signin", 404: "UserProfile Not found."},
+        manual_parameters=[openapi.Parameter("Authorization", openapi.IN_HEADER, description="access token", type=openapi.TYPE_STRING)]
+    )
     def put(self, request):
         user = request.user
         if not user.is_authenticated:
@@ -164,6 +180,21 @@ class UserProfileDetailView(APIView):
             return Response({"detail": "UserProfile Not found."}, status=status.HTTP_404_NOT_FOUND)
         
 class RemainingPointDeductView(APIView):
+    @swagger_auto_schema(
+        operation_id="포인트 차감",
+        operation_description="유저가 사주 상세 정보를 구매할 때, 보유 포인트를 차감합니다.",
+        request_body=swagger_auto_schema.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "point_to_deduct": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description="차감할 포인트",
+                )
+            },
+        ),
+        responses={200: UserProfileSerializer, 400: "point_to_deduct field missing.", 401: "please signin", 404: "UserProfile Not found."},
+        manual_parameters=[openapi.Parameter("Authorization", openapi.IN_HEADER, description="access token", type=openapi.TYPE_STRING)]
+    )
     def put(self, request):
         user = request.user
         if not user.is_authenticated:
@@ -185,6 +216,20 @@ class RemainingPointDeductView(APIView):
 
 
 class CheckUsernameView(APIView):
+    @swagger_auto_schema(
+        operation_id="유저명 중복 확인",
+        operation_description="유저명이 이미 존재하는지 확인합니다.",
+        request_body=swagger_auto_schema.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "username": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="중복을 확인할 유저명",
+                )
+            },
+        ),
+        responses={200: "Username is available", 400: "Username already exists"},
+    )
     def post(self, request):
         username = request.data.get("username")
         if User.objects.filter(username=username).exists():
@@ -199,9 +244,18 @@ class KakaoSignInView(APIView):
 
 
 class KakaoSignInCallbackView(APIView):
+    @swagger_auto_schema(
+        operation_id="카카오 로그인",
+        operation_description="""
+        카카오 간편 로그인을 진행합니다.
+        참고사항: 프론트 없이는 code 값을 발급받을 수 없기 때문에, 스웨거 단독 테스트가 불가능합니다.
+        """,
+        request_body=None,
+        responses={200: UserProfileSerializer},
+    )
     def post(self, request):
         ### 프론트로 들어온 code를 받아서 카카오로부터 access_token을 받아옴
-        code = request.GET.get("code") # 쿼리스트링으로 구현되어 있지만 나중에 body로 바뀔 수도...
+        code = request.GET.get("code")
         request_uri = f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={kakao_secret}&redirect_uri={kakao_redirect_uri}&code={code}"
         response = requests.post(request_uri)
         access_token = response.json().get("access_token")

@@ -15,6 +15,11 @@ from django.conf import settings
 from langchain_core.output_parsers import JsonOutputParser
 from pydantic import BaseModel, Field
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+from .serializers import AIRequestSerializer
+
 # 응답 형식 정의
 class FortuneMain(BaseModel):
     headline: str = Field(description="headline of the fortune")
@@ -31,6 +36,54 @@ class FortuneTypes(BaseModel):
     wealthFortune: FortuneShort = Field(description="wealth fortune for today")
 
 class ChatView(APIView):
+    @swagger_auto_schema(
+    operation_id="AI 운세 결과 생성",
+    operation_description="""
+    생년월일 정보를 기반으로 오늘의 운세를 생성합니다.
+    주의사항: OPENAI API를 사용하므로 요청 건마다 요금이 부과됩니다.
+    """,
+    request_body=AIRequestSerializer,
+    responses={
+        200: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'generalFortune': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'headline': openapi.Schema(type=openapi.TYPE_STRING, description="오늘의 운세 한 줄 요악"),
+                        'content': openapi.Schema(type=openapi.TYPE_STRING, description="종합 운세"),
+                    },
+                ),
+                'healthFortune': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'content': openapi.Schema(type=openapi.TYPE_STRING, description="건강 운세"),
+                    },
+                ),
+                'loveFortune': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'content': openapi.Schema(type=openapi.TYPE_STRING, description="애정 운세"),
+                    },
+                ),
+                'careerFortune': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'content': openapi.Schema(type=openapi.TYPE_STRING, description="직업 운세"),
+                    },
+                ),
+                'wealthFortune': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'content': openapi.Schema(type=openapi.TYPE_STRING, description="건강 운세"),
+                    },
+                ),
+            },
+            description="운세 결과를 포함하는 응답"
+        ),
+        500: "일시적인 오류로 결과를 불러올 수 없습니다."
+        }
+    )
     def post(self, request):
 
         data = request.data['data']

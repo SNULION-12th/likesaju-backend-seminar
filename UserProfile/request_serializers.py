@@ -16,3 +16,7 @@ class SignInRequestSerializer(ModelSerializer):
 
 class TokenRefreshRequestSerializer(serializers.Serializer):
     refresh = serializers.CharField()
+
+class UserProfileUpdateRequestSerializer(serializers.Serializer):
+    profilepic_id = serializers.IntegerField()
+    nickname = serializers.CharField()
