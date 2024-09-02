@@ -54,6 +54,8 @@ urlpatterns = [
     path('api/profilepic/', include('ProfilePic.urls')),
     path('api/point/', include('Point.urls')),
     path("api/payment/", include("Payment.urls")),
+    path("api/saju/", include("SajuAI.urls")),
+
 ] + router.urls
 
 # siwon added for websocket routing 0811
