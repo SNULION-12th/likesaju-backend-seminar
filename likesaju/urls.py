@@ -51,7 +51,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('api/user/', include('UserProfile.urls')),
-    path('api/profilepic/', include('ProfilePic.urls')),
     path('api/point/', include('Point.urls')),
     path("api/payment/", include("Payment.urls")),
     path("api/saju/", include("SajuAI.urls")),

@@ -97,8 +97,8 @@ class ChatRoomViewSet(viewsets.ViewSet):
                 profile = {
                     "nickname": participant.userprofile.nickname,
                     "profilepic": {
-                        "id": participant.userprofile.profilepic_id.id,
-                        "imagelink": participant.userprofile.profilepic_id.imagelink
+                        "id": participant.userprofile.profilepic_id,
+                        "imagelink": participant.userprofile.profilepic_id
                     } if participant.userprofile.profilepic_id else None
                 }
                 participants.append({
@@ -126,8 +126,8 @@ class ChatRoomViewSet(viewsets.ViewSet):
                 profile = {
                     "nickname": participant.userprofile.nickname,
                     "profilepic": {
-                        "id": participant.userprofile.profilepic_id.id,
-                        "imagelink": participant.userprofile.profilepic_id.imagelink
+                        "id": participant.userprofile.profilepic_id,
+                        "imagelink": participant.userprofile.profilepic_id
                     } if participant.userprofile.profilepic_id else None
                 }
                 participants.append({
@@ -169,8 +169,8 @@ class ChatRoomViewSet(viewsets.ViewSet):
                 
                 # profilepic 부분은 임의의 값으로 설정
                 profilepic_info = {
-                    "id": user_profile.profilepic_id.id, 
-                    "imagelink": user_profile.profilepic_id.imagelink
+                    "id": user_profile.profilepic_id, 
+                    "imagelink": user_profile.profilepic_id
                 } if user_profile.profilepic_id else None
 
                 participant_info = {
