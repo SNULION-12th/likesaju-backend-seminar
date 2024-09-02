@@ -12,6 +12,11 @@ from UserProfile.models import UserProfile
 import requests
 import json
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+from .serializers import PayReadyRequestSerializer, PayApproveRequestSerializer, PayReadyResponseSerializer, PayApproveResponseSerializer
+
 from django.conf import settings
 
 pay_key = settings.KAKAO_PAY_KEY
@@ -26,6 +31,12 @@ pay_header = {
 }
 
 class PayReadyView(APIView):
+    @swagger_auto_schema(
+        operation_id="카카오페이 단건결제 준비 API",
+        operation_description="결제 정보를 카카오페이 서버에 전달하고, 결제 고유번호와 결제 준비 요청에 필요한 URL을 가져옵니다.",
+        request_body=PayReadyRequestSerializer,
+        responses={200: PayReadyResponseSerializer, 401: "please signin."}
+    )
     def post(self, request):
         pay_data = request.data
 
@@ -52,6 +63,15 @@ class PayReadyView(APIView):
         return Response(response.json(), status=response.status_code)
 
 class PayApproveView(APIView):
+    @swagger_auto_schema(
+        operation_id="카카오페이 단건결제 승인 API",
+        operation_description="""
+        사용자가 결제 수단을 선택하고 비밀번호를 입력해 결제 인증을 완료한 뒤, 최종적으로 결제 완료 처리를 요청합니다.
+        주의사항: 프론트엔드 없이는 카카오페이 결제창을 띄울 수 없으므로, 해당 API는 스웨거에서 테스트가 어렵습니다.
+        """,
+        request_body=PayApproveRequestSerializer,
+        responses={200: PayApproveResponseSerializer, 401: "please signin."},
+    )
     def post(self, request):
         user = request.user
         if not user.is_authenticated:
