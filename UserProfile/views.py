@@ -10,7 +10,6 @@ from django.contrib.auth.hashers import make_password
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .models import UserProfile
-from ProfilePic.models import ProfilePic
 import requests
 from django.conf import settings
 import json
@@ -40,7 +39,8 @@ class SignUpView(APIView):
         responses={201: UserProfileSerializer, 400: "Bad Request"},
     )
     def post(self, request):
-        
+        print("여기!!")
+        print(request.data)
         user_serializer = UserSerializer(data=request.data)
         if user_serializer.is_valid(raise_exception=True):
             user_serializer.validated_data["password"] = make_password(
@@ -153,7 +153,7 @@ class UserProfileDetailView(APIView):
             nickname = request.data.get("nickname")
             if not profilepic_id or not nickname:
                 return Response({"detail": "[profilepic_id, nickname] fields missing."}, status=status.HTTP_400_BAD_REQUEST)
-            user_profile.profilepic_id = ProfilePic.objects.get(id=profilepic_id)
+            user_profile.profilepic_id=profilepic_id # 1~6 사이 값이어야 함!
             user_profile.nickname = nickname
             user_profile.save()
             serializer = UserProfileSerializerForUpdate(user_profile)

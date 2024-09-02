@@ -60,7 +60,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     # Internal
     'corsheaders',
-    'ProfilePic',
     'UserProfile',
     'Point',
     'Payment',
