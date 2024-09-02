@@ -39,8 +39,6 @@ class SignUpView(APIView):
         responses={201: UserProfileSerializer, 400: "Bad Request"},
     )
     def post(self, request):
-        print("여기!!")
-        print(request.data)
         user_serializer = UserSerializer(data=request.data)
         if user_serializer.is_valid(raise_exception=True):
             user_serializer.validated_data["password"] = make_password(
