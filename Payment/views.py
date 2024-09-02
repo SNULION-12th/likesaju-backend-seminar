@@ -35,7 +35,8 @@ class PayReadyView(APIView):
         operation_id="카카오페이 단건결제 준비 API",
         operation_description="결제 정보를 카카오페이 서버에 전달하고, 결제 고유번호와 결제 준비 요청에 필요한 URL을 가져옵니다.",
         request_body=PayReadyRequestSerializer,
-        responses={200: PayReadyResponseSerializer, 401: "please signin."}
+        responses={200: PayReadyResponseSerializer, 401: "please signin."},
+        manual_parameters=[openapi.Parameter("Authorization", openapi.IN_HEADER, description="access token", type=openapi.TYPE_STRING)]
     )
     def post(self, request):
         pay_data = request.data
@@ -71,6 +72,7 @@ class PayApproveView(APIView):
         """,
         request_body=PayApproveRequestSerializer,
         responses={200: PayApproveResponseSerializer, 401: "please signin."},
+        manual_parameters=[openapi.Parameter("Authorization", openapi.IN_HEADER, description="access token", type=openapi.TYPE_STRING)]
     )
     def post(self, request):
         user = request.user
