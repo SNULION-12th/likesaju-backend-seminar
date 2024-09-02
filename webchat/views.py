@@ -20,6 +20,7 @@ User = get_user_model()  # User 모델 가져오기
 class ChatRoomViewSet(viewsets.ViewSet):
     @swagger_auto_schema(
         operation_description="Create a new chatroom with specified participants",
+        operation_id="채팅방 생성",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
