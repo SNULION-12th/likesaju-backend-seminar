@@ -124,6 +124,9 @@ class SignOutView(APIView):
 
 class UserProfileListView(APIView):
     def get(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"detail": "please signin"}, status=status.HTTP_401_UNAUTHORIZED)
         user_profile = UserProfile.objects.all()
         serializer = UserProfileSerializer(user_profile, many=True)
         return Response(serializer.data)

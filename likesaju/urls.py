@@ -22,6 +22,15 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from rest_framework.routers import DefaultRouter
+
+# siwon added 0811
+from webchat.views import MessageViewSet, ChatRoomViewSet
+
+# siwon added 0812
+from webchat.consumer import WebChatConsumer
+
+
 schema_view = get_schema_view(
     openapi.Info(
         title="LIKESAJU API",
@@ -32,6 +41,12 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
+# siwon added 0811
+router = DefaultRouter()
+router.register("api/messages", MessageViewSet, basename="message")
+router.register('api/chatrooms', ChatRoomViewSet, basename='chatroom')  # 추가된 부분
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
@@ -40,4 +55,12 @@ urlpatterns = [
     path('api/point/', include('Point.urls')),
     path("api/payment/", include("Payment.urls")),
     path("api/saju/", include("SajuAI.urls")),
+
+] + router.urls
+
+# siwon added for websocket routing 0811
+# 웹소켓 요청은 view가 아닌 consumer로 forward
+# 웹소켓 엔드포인트 설정
+websocket_urlpatterns = [
+    path( "" ,  WebChatConsumer.as_asgi())
 ]
