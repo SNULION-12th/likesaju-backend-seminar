@@ -38,7 +38,7 @@ OPENAI_API_KEY = env('OPENAI_API_KEY')
 # HUGGINGFACEHUB_API_KEY = env('HUGGINGFACEHUB_API_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -214,3 +214,7 @@ SWAGGER_SETTINGS = {
 CHANNEL_LAYERS = {
     "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
 }
+
+import os
+if 'WEBSITE_HOSTNAME' in os.environ:
+    from .azure import *
