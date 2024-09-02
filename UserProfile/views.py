@@ -183,7 +183,7 @@ class RemainingPointDeductView(APIView):
     @swagger_auto_schema(
         operation_id="포인트 차감",
         operation_description="유저가 사주 상세 정보를 구매할 때, 보유 포인트를 차감합니다.",
-        request_body=swagger_auto_schema.Schema(
+        request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
                 "point_to_deduct": openapi.Schema(
@@ -219,7 +219,7 @@ class CheckUsernameView(APIView):
     @swagger_auto_schema(
         operation_id="유저명 중복 확인",
         operation_description="유저명이 이미 존재하는지 확인합니다.",
-        request_body=swagger_auto_schema.Schema(
+        request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
                 "username": openapi.Schema(
