@@ -42,7 +42,8 @@ DEBUG = False
 
 
 AZURE_APP_NAME = env('AZURE_APP_NAME')
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', f'{AZURE_APP_NAME}.azurewebsites.net']
+VERCEL_URL = env('VERCEL_URL')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', f'{AZURE_APP_NAME}.azurewebsites.net', 'f{VERCEL_URL}']
 
 
 # Application definition
