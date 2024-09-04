@@ -40,7 +40,9 @@ OPENAI_API_KEY = env('OPENAI_API_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+AZURE_APP_NAME = env('AZURE_APP_NAME')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', f'{AZURE_APP_NAME}.azurewebsites.net']
 
 
 # Application definition
@@ -81,11 +83,13 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://likesajuuu.vercel.app"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://likesajuuu.vercel.app"
 ]
 
 SESSION_COOKIE_SAMESITE = None
