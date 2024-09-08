@@ -38,12 +38,10 @@ OPENAI_API_KEY = env('OPENAI_API_KEY')
 # HUGGINGFACEHUB_API_KEY = env('HUGGINGFACEHUB_API_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 
-AZURE_APP_NAME = env('AZURE_APP_NAME')
-VERCEL_URL = env('VERCEL_URL')
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', f'{AZURE_APP_NAME}.azurewebsites.net', 'f{VERCEL_URL}']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -84,13 +82,11 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://likesajuuu.vercel.app"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://likesajuuu.vercel.app"
 ]
 
 SESSION_COOKIE_SAMESITE = None
@@ -219,7 +215,3 @@ SWAGGER_SETTINGS = {
 CHANNEL_LAYERS = {
     "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
 }
-
-import os
-if 'WEBSITE_HOSTNAME' in os.environ:
-    from .azure import *
