@@ -97,10 +97,7 @@ class ChatRoomViewSet(viewsets.ViewSet):
             for participant in chatroom.participants.all():
                 profile = {
                     "nickname": participant.userprofile.nickname,
-                    "profilepic": {
-                        "id": participant.userprofile.profilepic_id,
-                        "imagelink": participant.userprofile.profilepic_id
-                    } if participant.userprofile.profilepic_id else None
+                    "profilepic_id": participant.userprofile.profilepic_id,
                 }
                 participants.append({
                     "id": participant.id,
@@ -126,10 +123,7 @@ class ChatRoomViewSet(viewsets.ViewSet):
             for participant in chatroom.participants.all():
                 profile = {
                     "nickname": participant.userprofile.nickname,
-                    "profilepic": {
-                        "id": participant.userprofile.profilepic_id,
-                        "imagelink": participant.userprofile.profilepic_id
-                    } if participant.userprofile.profilepic_id else None
+                    "profilepic_id": participant.userprofile.profilepic_id
                 }
                 participants.append({
                     "id": participant.id,
@@ -178,7 +172,7 @@ class ChatRoomViewSet(viewsets.ViewSet):
                     "id": participant.id,
                     "profile": {
                         "nickname": user_profile.nickname,
-                        "profilepic": profilepic_info
+                        "profilepic_id": user_profile.profilepic_id
                     }
                 }
                 participants_info.append(participant_info)     
