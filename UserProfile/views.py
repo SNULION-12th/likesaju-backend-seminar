@@ -19,6 +19,11 @@ kakao_redirect_uri = settings.KAKAO_REDIRECT_URI
 from .serializers import UserSerializer, UserProfileSerializer
 from .request_serializers import SignUpRequestSerializer, SignInRequestSerializer, TokenRefreshRequestSerializer, UserProfileUpdateRequestSerializer, SignOutRequestSerializer
 
+import requests
+from django.conf import settings
+kakao_secret = settings.KAKAO_SECRET_KEY
+kakao_redirect_uri = settings.KAKAO_REDIRECT_URI
+
 def set_token_on_response_cookie(user, status_code) -> Response:
     token = RefreshToken.for_user(user)
     user_profile = UserProfile.objects.get(user=user)
