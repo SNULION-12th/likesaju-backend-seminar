@@ -11,6 +11,11 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .models import UserProfile
 
+import requests
+from django.conf import settings
+kakao_secret = settings.KAKAO_SECRET_KEY
+kakao_redirect_uri = settings.KAKAO_REDIRECT_URI
+
 from .serializers import UserSerializer, UserProfileSerializer
 from .request_serializers import SignUpRequestSerializer, SignInRequestSerializer, TokenRefreshRequestSerializer, UserProfileUpdateRequestSerializer, SignOutRequestSerializer
 
@@ -228,3 +233,49 @@ class CheckUsernameView(APIView):
         if User.objects.filter(username=username).exists():
             return Response({"message": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Username is available"}, status=status.HTTP_200_OK)
+    
+class KakaoSignInCallbackView(APIView):
+    @swagger_auto_schema(
+        operation_id="카카오 로그인",
+        operation_description="""
+        카카오 간편 로그인을 진행합니다.
+        참고사항: 프론트 없이는 code 값을 발급받을 수 없기 때문에, 스웨거 단독 테스트가 불가능합니다.
+        """,
+        request_body=None,
+        responses={200: UserProfileSerializer},
+    )
+    def post(self, request):
+        ### 프론트로 들어온 code를 받아서 카카오로부터 access_token을 받아옴
+        code = request.GET.get("code")
+        request_uri = f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={kakao_secret}&redirect_uri={kakao_redirect_uri}&code={code}"
+        response = requests.post(request_uri)
+        access_token = response.json().get("access_token")
+
+        ### 카카오로부터 받은 access_token을 이용해 카카오톡 유저 정보를 받아옴
+        user_info = requests.get(
+            "https://kapi.kakao.com/v2/user/me",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        user_info = user_info.json()
+
+        ### 카카오 로그인을 통해 받아온 정보로 Django db에 유저 생성 및 자체 토큰 발급
+        ### 유저가 없으면 생성(회원가입), 있으면 토큰 발급만(로그인)
+        try:
+            user = User.objects.get(username=user_info.get("id"))
+        except User.DoesNotExist:
+            user_data = {
+                "username": user_info.get("id"),
+                "password": "social_login_password",
+            }
+            user_serializer = UserSerializer(data=user_data)
+            if user_serializer.is_valid(raise_exception=True):
+                user_serializer.validated_data["password"] = make_password(
+                    user_serializer.validated_data["password"]
+                )
+                user = user_serializer.save()
+
+            UserProfile.objects.create(
+                user=user,
+                is_social_login=True,
+            )
+        return set_token_on_response_cookie(user, status_code=status.HTTP_200_OK)
