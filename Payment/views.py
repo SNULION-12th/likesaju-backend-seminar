@@ -72,7 +72,6 @@ class PayApproveView(APIView):
         except Payment.DoesNotExist:
             return Response({"detail": "Payment record not found."}, status=status.HTTP_404_NOT_FOUND)
         
-        # Prepare the data for the KakaoPay approve API
         pay_data = {
             'cid': cid,
             'tid': tid,
@@ -88,19 +87,16 @@ class PayApproveView(APIView):
             'Content-Type': 'application/json',
         }
         
-        # Send the request to KakaoPay approve API
         response = requests.post(payapprove_url, headers=pay_header, data=pay_data)
 
         if response.status_code == 200:
-            # If approved, update the payment record and user profile
+           
             pay_hist.pay_status = 'approved'
             userprofile = UserProfile.objects.get(user=user)
             userprofile.remaining_points += int(pay_hist.point)
             pay_hist.save()
             userprofile.save()
 
-            # Save the tid to ensure it's retrievable for order history
-            # Assuming Payment model already has a `tid` field
             pay_hist.tid = tid
             pay_hist.save()
 
@@ -115,51 +111,53 @@ class PayHistoryView(APIView):
         if not user.is_authenticated:
             return Response({"detail": "Please sign in."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # Get all payment records for the current user
         payments = Payment.objects.filter(user=user)
 
         if not payments.exists():
             return Response({"detail": "No payment records found."}, status=status.HTTP_404_NOT_FOUND)
 
         payment_history = []
-        
-        # Iterate through each payment record and fetch details from KakaoPay using tid
+
         for payment in payments:
             tid = payment.tid
             pay_data = {
-                'cid': settings.KAKAO_PAY_CID,
+                'cid': settings.KAKAO_PAY_CID,  # Make sure this is correct
                 'tid': tid
             }
 
-            # KakaoPay order inquiry URL
-            payorder_url = 'https://kapi.kakaopay.com/v1/payment/order'
+            payorder_url = 'https://open-api.kakaopay.com/online/v1/payment/order'
             pay_header = {
-                'Authorization': f'KakaoAK {settings.KAKAO_ADMIN_KEY}',
-                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+                'Authorization': f'SECRET_KEY {settings.KAKAO_ADMIN_KEY}',  # Use the correct secret key format
+                'Content-Type': 'application/json',
             }
 
-            # Fetch detailed payment info from KakaoPay
-            response = requests.post(payorder_url, headers=pay_header, data=pay_data)
-            print(response)
-            if response.status_code == 200:
-                payment_info = response.json()
-                # Add payment details to the list
+            try:
+                response = requests.post(payorder_url, headers=pay_header, json=pay_data)
+                if response.status_code == 200:
+                    payment_info = response.json()
+                    payment_history.append({
+                        'item_name': payment_info['item_name'],
+                        'amount': payment_info['amount']['total'],
+                        'payment_method_type': payment_info['payment_method_type'],
+                        'approved_at': payment_info['approved_at'],
+                        'tid': tid
+                    })
+                else:
+                    payment_history.append({
+                        'item_name': payment.item_name,
+                        'amount': payment.amount,
+                        'payment_method_type': 'Unknown',
+                        'approved_at': payment.created_at.isoformat(),
+                        'tid': tid
+                    })
+            except requests.exceptions.RequestException as e:
+                print(f"Error fetching payment info: {e}")
                 payment_history.append({
-                    'item_name': payment_info['item_name'],
-                    'amount': payment_info['amount']['total'],
-                    'payment_method_type': payment_info['payment_method_type'],
-                    'approved_at': payment_info['approved_at'],
-                    'tid': tid
-                })
-            else:
-                # Handle case when payment detail fetch fails
-                payment_history.append({
-                    'item_name': payment.item_name,  # Fallback to local data if API fails
-                    'amount': payment.amount,  # Use stored amount if API fails
+                    'item_name': payment.item_name,
+                    'amount': payment.amount,
                     'payment_method_type': 'Unknown',
-                    'approved_at': payment.created_at.isoformat(),  # Use creation time as fallback
+                    'approved_at': payment.created_at.isoformat(),
                     'tid': tid
                 })
 
-        # Return the full payment history to the frontend
         return Response(payment_history, status=status.HTTP_200_OK)
