@@ -11,11 +11,6 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .models import UserProfile
 
-import requests
-from django.conf import settings
-kakao_secret = settings.KAKAO_SECRET_KEY
-kakao_redirect_uri = settings.KAKAO_REDIRECT_URI
-
 from .serializers import UserSerializer, UserProfileSerializer
 from .request_serializers import SignUpRequestSerializer, SignInRequestSerializer, TokenRefreshRequestSerializer, UserProfileUpdateRequestSerializer, SignOutRequestSerializer
 
