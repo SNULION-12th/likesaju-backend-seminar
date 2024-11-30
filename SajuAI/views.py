@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from langchain.chat_models import ChatOpenAI
 
 # from langchain_community.llms import HuggingFaceHub
+from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import PromptTemplate
 
 from django.conf import settings
@@ -90,18 +91,20 @@ class ChatView(APIView):
         openai_key = settings.OPENAI_API_KEY
 
         # 모델 생성
-        model_id = "gpt-3.5-turbo"
-        model = ChatOpenAI(
-            model_name=model_id,
-            openai_api_key=openai_key,
-        )
+        # model_id = "gpt-3.5-turbo"
+        # model = ChatOpenAI(
+        #     model_name=model_id,
+        #     openai_api_key=openai_key,
+        # )
 
-#         model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-#         model = HuggingFaceHub(
-#             repo_id=model_id,
-#             huggingfacehub_api_token=huggingface_key,
-#             model_kwargs={'temperature': 0.75, "return_full_text" : False,'max_new_tokens': 800}
-#         )
+        model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
+        model = HuggingFaceEndpoint(
+            repo_id=model_id,
+            huggingfacehub_api_token=settings.HUGGINGFACEHUB_API_KEY,
+            max_new_tokens=800,
+            return_full_text=False,
+            temperature=0.75,
+        )
 
         output_parser = JsonOutputParser(pydantic_object=FortuneTypes)
         format_instructions = output_parser.get_format_instructions()
@@ -126,7 +129,7 @@ class ChatView(APIView):
                 "
         **반드시!! 한국어만 사용해서 응답해**
         위와 다른 **새로운** 글을 써주길 바란다. 각각의 문장의 구성또한 달라질 수 있으며 다양한 표현을 사용할 수록 좋다. 각 항목은 세 문장 이상이면 좋다. 반드시 **한국어**로 대답하여라.
-        정해진 json 형식을 벗어나는 답변은 허용하지 않으므로 {format_instructions}대로만 답변해라
+        정해진 json 형식을 벗어나는 답변은 허용하지 않으므로 {format_instructions}대로만 답변해라. 각 항목은 반드시 한개씩만 존재해야 한다.
         **반드시!! 한국어만 사용해서 응답해**
 
 
