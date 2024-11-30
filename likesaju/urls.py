@@ -37,4 +37,5 @@ urlpatterns = [
     path('api/point/', include('Point.urls')),
     path('api/user/', include('UserProfile.urls')),
     path("api/payment/", include("Payment.urls")),
+    path("api/saju/", include("SajuAI.urls")),
 ]
